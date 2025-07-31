@@ -1,5 +1,4 @@
-{-# LANGUAGE LinearTypes      #-}
-{-# LANGUAGE RebindableSyntax #-}
+{-# LANGUAGE QualifiedDo #-}
 
 module GatesTest where
 
@@ -94,10 +93,10 @@ testTwoQubitGates = TestList
     ]
 
 -- Test quantum circuits using monadic composition
-{- testQuantumCircuits :: Test
+testQuantumCircuits :: Test
 testQuantumCircuits = TestList
     [ "Bell state circuit structure" ~:
-        let bellCircuit = do
+        let bellCircuit = V.do
                 q1 <- ket0
                 q1' <- hadamard q1
                 q2 <- ket0
@@ -106,7 +105,7 @@ testQuantumCircuits = TestList
         in length result ~?= 2  -- Bell state should have 2 components
 
     , "Grover iteration with do notation" ~:
-        let groverStep = do
+        let groverStep = V.do
                 q <- ket0
                 q1 <- hadamard q      -- Create superposition
                 q2 <- pauliZ q1       -- Oracle (phase flip)
@@ -115,14 +114,14 @@ testQuantumCircuits = TestList
         in length result > 0 ~? "Grover step with do notation produces quantum state"
 
     , "Quantum phase kickback" ~:
-        let phaseKickback = do
+        let phaseKickback = V.do
                 control <- ket1       -- Control qubit in |1⟩
                 target <- ket0        -- Target qubit in |0⟩
                 target' <- hadamard target  -- Put target in superposition
                 cz control target'    -- Controlled-Z gate
             V result = phaseKickback
         in length result > 0 ~? "Phase kickback circuit with do notation"
-    ] -}
+    ]
 
 -- Test quantum interference
 testQuantumInterference :: Test
@@ -164,38 +163,18 @@ testGateProperties = TestList
         in length components >= 2 ~? "HH creates superposition pattern"
     ]
 
-f,g :: Int %1 -> Int
-f = undefined
-g = undefined
-
-h :: Int %1 -> Int
-h x = g y
-  where
-    y = f x
-
-k :: Int %1 -> V Bool
-ma :: V Int
-k = undefined
-ma = undefined
-
-test1 = ma >>= \x -> k x
-test2 = ma >>= \x -> (k x >>= \x -> k x)
-
 -- Test proper vector operations using explicit addition
 testVectorOperations :: Test
 testVectorOperations = TestList
     [ "Manual Hadamard composition with do notation" ~:
-        let manualHH = do
+        let manualHH = V.do
                 q <- ket0
-                q1 <- hadamard q
-                hadamard q1
-                -- q1 <- hadamard q  -- First Hadamard
-                -- hadamard q1       -- Second Hadamard (manually composed)
-            -- manualHH' = ket0 >>= \q -> hadamard q >>= \q1 -> hadamard q1
+                q1 <- hadamard q  -- First Hadamard
+                hadamard q1       -- Second Hadamard (manually composed)
             V result = manualHH
         in length result > 0 ~? "Manual HH composition with do notation works"
 
-    {- , "Vector addition combines like terms" ~:
+    , "Vector addition combines like terms" ~:
         let state1 = V [(CC (0.5 :+ 0), False)]
             state2 = V [(CC (0.5 :+ 0), False)]
             combined = state1 A.+ state2
@@ -205,7 +184,7 @@ testVectorOperations = TestList
 
     , "Complex quantum circuit with do notation" ~:
         -- Test a more complex circuit: |0⟩ → H → Z → H using do notation
-        let complexCircuit = do
+        let complexCircuit = V.do
                 q0 <- ket0
                 q1 <- hadamard q0   -- Create superposition
                 q2 <- pauliZ q1     -- Apply phase flip
@@ -215,7 +194,7 @@ testVectorOperations = TestList
 
     , "Quantum teleportation setup" ~:
         -- Create entangled pair for teleportation protocol
-        let entangledPair = do
+        let entangledPair = V.do
                 alice <- ket0
                 alice' <- hadamard alice  -- Alice's qubit in superposition
                 bob <- ket0
@@ -225,13 +204,13 @@ testVectorOperations = TestList
 
     , "Multi-gate sequence" ~:
         -- Test applying multiple gates in sequence
-        let multiGate = do
+        let multiGate = V.do
                 q <- ket0
                 q1 <- pauliX q      -- Flip to |1⟩
                 q2 <- hadamard q1   -- Create superposition from |1⟩
                 pauliZ q2           -- Apply phase
             V result = multiGate
-        in length result > 0 ~? "Multi-gate sequence with do notation" -}
+        in length result > 0 ~? "Multi-gate sequence with do notation"
     ]
 
 -- Combine all tests

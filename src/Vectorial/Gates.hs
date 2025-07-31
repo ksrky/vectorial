@@ -1,61 +1,49 @@
 module Vectorial.Gates where
 
 import Data.Complex
-import Vectorial.Syntax
 import Vectorial.Vector as V
+import Vectorial.Algebra as A
 
-ket0 :: VPattern
-ket0 = V.return (PBit False)
+ket0 :: V Bool
+ket0 = V.return False
 
-ket1 :: VPattern
-ket1 = V.return (PBit True)
+ket1 :: V Bool
+ket1 = V.return True
 
-ketPlus :: VPattern
-ketPlus = V [(1 / sqrt 2, PBit False), (1 / sqrt 2, PBit True)]
+ketPlus :: V Bool
+ketPlus = V [(1 / sqrt 2, False), (1 / sqrt 2, True)]
 
-ketMinus :: VPattern
-ketMinus = V [(1 / sqrt 2, PBit False), (- (1 / sqrt 2), PBit True)]
+ketMinus :: V Bool
+ketMinus = V [(1 / sqrt 2, False), (- (1 / sqrt 2), True)]
 
-patTerm :: Pattern -> Term
-patTerm (PBit b)      = Bit b
-patTerm (PVar x)      = Var x
-patTerm (PPair p1 p2) = Pair (V.return $ patTerm p1) (V.return $ patTerm p2)
+pauliX :: Bool -> V Bool
+pauliX False = V.return True
+pauliX True  = V.return False
 
-pauliX :: Iso
-pauliX = [ (PBit False, V.return (PBit True))
-         , (PBit True, V.return (PBit False))
-         ]
+pauliZ :: Bool -> V Bool
+pauliZ False = V.return False
+pauliZ True  = A.negate $ V.return True
 
-pauliZ :: Iso
-pauliZ = [ (PBit False, V.return (PBit False))
-         , (PBit True, V.return (PBit True))
-         ]
+hadamard :: Bool -> V Bool
+hadamard False = ketPlus
+hadamard True  = ketMinus
 
-hadamard :: Iso
-hadamard = [ (PBit False, ketPlus)
-           , (PBit True, ketMinus)
-           ]
+phaseS :: Bool -> V Bool
+phaseS False = V.return False
+phaseS True  = V [(exp (CC (0 :+ pi / 2)), True)]
 
-phaseS :: Iso
-phaseS = [ (PBit False, V.return (PBit False))
-         , (PBit True, V [(exp (CC (0 :+ pi / 2)), PBit True)])
-         ]
+phaseT :: Bool -> V Bool
+phaseT False = V.return False
+phaseT True  = V [(exp (CC (0 :+ pi / 4)), True)]
 
-phaseT :: Iso
-phaseT = [ (PBit False, V.return (PBit False))
-         , (PBit True, V [(exp (CC (0 :+ pi / 4)), PBit True)])
-         ]
+cnot :: Bool -> Bool -> V (Bool, Bool)
+cnot False False = V.return (False, False)
+cnot False True  = V.return (False, True)
+cnot True False  = V.return (True, True)
+cnot True True   = V.return (True, False)
 
-cnot :: Iso
-cnot = [ (PPair (PBit False) (PBit False), V.return (PPair (PBit False) (PBit False)))
-       , (PPair (PBit False) (PBit True), V.return (PPair (PBit False) (PBit True)))
-       , (PPair (PBit True) (PBit False), V.return (PPair (PBit True) (PBit True)))
-       , (PPair (PBit True) (PBit True), V.return (PPair (PBit True) (PBit False)))
-       ]
-
-cz :: Iso
-cz = [ (PPair (PBit False) (PBit False), V.return (PPair (PBit False) (PBit False)))
-     , (PPair (PBit False) (PBit True), V.return (PPair (PBit False) (PBit True)))
-     , (PPair (PBit True) (PBit False), V.return (PPair (PBit True) (PBit False)))
-     , (PPair (PBit True) (PBit True), V [(-1, PPair (PBit True) (PBit True))])
-     ]
+cz :: Bool -> Bool -> V (Bool, Bool)
+cz False False = V.return (False, False)
+cz False True  = V.return (False, True)
+cz True False  = V.return (True, False)
+cz True True   = A.negate $ V.return (True, True)

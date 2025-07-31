@@ -2,7 +2,7 @@ module Vectorial.Vector where
 
 import Data.Complex
 import Data.Foldable
-import Prelude           hiding ((*>))
+import Prelude           hiding (Monad(..))
 import Vectorial.Algebra qualified as A
 
 type RR = Double
@@ -43,7 +43,9 @@ instance Eq a => A.Module CC (V a) where
 
 class EqMonad m where
     return :: Eq a => a -> m a
-    (>>=) :: (Eq a, Eq b) => m a -> (a -> m b) -> m b
+    (>>=)  :: (Eq a, Eq b) => m a -> (a -> m b) -> m b
+
+infixl 1 >>=
 
 instance EqMonad V where
     return x = V [(1, x)]

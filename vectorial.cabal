@@ -19,17 +19,11 @@ common warnings
 library
     import:           warnings
     exposed-modules:  Vectorial.Algebra
-                      Vectorial.Check
-                      Vectorial.Eval
                       Vectorial.Gates
-                      Vectorial.Lexer
-                      Vectorial.Parser
-                      Vectorial.Syntax
                       Vectorial.Vector
     other-modules:    
-    build-depends:    array,
-                      base ^>=4.19.2.0,
-    build-tool-depends: alex:alex, happy:happy
+    build-depends:    base ^>=4.21.0.0,
+                      linear-base
     hs-source-dirs:   src
     default-language: GHC2021
 
@@ -38,19 +32,17 @@ executable vectorial
     main-is:          Main.hs
     -- other-modules:
     -- other-extensions:
-    build-depends:    base ^>=4.19.2.0
+    build-depends:    base ^>=4.21.0.0
     hs-source-dirs:   app
     default-language: GHC2021
 
 test-suite vectorial-tests
     import:           warnings
     type:             exitcode-stdio-1.0
-    main-is:          Main.hs
-    other-modules:    EvalTests
-                      ParserTests
-                      ComplexEvalTests
-    build-depends:    base ^>=4.19.2.0,
+    main-is:          Spec.hs
+    other-modules:    GatesTest
+    build-depends:    base ^>=4.21.0.0,
                       vectorial,
-                      hspec
+                      HUnit
     hs-source-dirs:   test
     default-language: GHC2021
