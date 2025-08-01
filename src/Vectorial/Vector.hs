@@ -10,20 +10,25 @@ import Data.Monoid.Linear
 import Data.Num.Linear
 import Prelude qualified
 import Prelude.Linear
+import Unsafe.Linear      qualified as Unsafe
 
 type RR = Double
 
 newtype CC = CC (Complex RR)
-    deriving (Show, Prelude.Num)
+    deriving (Show, Prelude.Eq, Prelude.Num)
 
 instance Consumable CC where
-    consume = undefined
+    consume (CC (x :+ y)) = consume x <> consume y
 
 instance Dupable CC where
-    dup2 = undefined
+    dup2 (CC (x :+ y)) = withDup (dup2 x) (dup2 y)
+      where
+        withDup :: (RR, RR) %1 -> (RR, RR) %1 -> (CC, CC)
+        withDup (x1, x2) (y1, y2) = (CC (x1 :+ y1), CC (x2 :+ y2))
 
 instance Movable CC where
-    move = undefined
+    move (CC (x :+ y)) = case (move x, move y) of
+        (Ur x', Ur y') -> Ur (CC (x' :+ y'))
 
 instance Eq CC where
     CC (x1 :+ x2) == CC (y1 :+ y2) = x1 == y1 && x2 == y2
@@ -56,10 +61,24 @@ instance FromInteger CC where
 
 instance Fractional CC where
     fromRational r = CC (fromRational r :+ 0)
-    (/)= undefined
+    CC (x1 :+ y1) / CC (x2 :+ y2) =
+        let denom = x2 * x2 + y2 * y2
+        in CC ((x1 * x2 + y1 * y2) / denom :+ (y1 * x2 - x1 * y2) / denom)
 
 instance Floating CC where
-    pi = CC (pi :+ 0)
+    pi = CC Prelude.pi
+    exp (CC z) = CC (Prelude.exp z)
+    log (CC z) = CC (Prelude.log z)
+    sin (CC z) = CC (Prelude.sin z)
+    cos (CC z) = CC (Prelude.cos z)
+    asin (CC z) = CC (Prelude.asin z)
+    acos (CC z) = CC (Prelude.acos z)
+    atan (CC z) = CC (Prelude.atan z)
+    sinh (CC z) = CC (Prelude.sinh z)
+    cosh (CC z) = CC (Prelude.cosh z)
+    asinh (CC z) = CC (Prelude.asinh z)
+    acosh (CC z) = CC (Prelude.acosh z)
+    atanh (CC z) = CC (Prelude.atanh z)
 
 
 instance Semigroup CC where
@@ -68,37 +87,44 @@ instance Semigroup CC where
 instance Monoid CC where
     mempty = 0
 
-
 newtype V a = V [(CC, a)]
     deriving (Show, Eq)
 
-instance Eq a => Semigroup (V a) where
-    (<>) = undefined -- V xs <> V ys = V [(c1 + c2, x) | (c1, x) <- xs, (c2, y) <- ys, x == y]
+instance (Eq a, Movable a) => Semigroup (V a) where
+    V xs <> V ys = case (move xs, move ys) of
+        (Ur xs', Ur ys') -> V [(c1 + c2, x) | (c1, x) <- xs', (c2, y) <- ys', x == y]
 
-instance Eq a => Monoid (V a) where
+instance (Eq a, Movable a) => Monoid (V a) where
     mempty = V []
 
-instance Eq a => Additive (V a) where
+instance (Eq a, Movable a) => Additive (V a) where
     (+) = (<>)
 
-instance Eq a => AddIdentity (V a) where
+instance (Eq a, Movable a) => AddIdentity (V a) where
     zero = V []
 
-instance Eq a => AdditiveGroup (V a) where
+instance (Eq a, Movable a) => AdditiveGroup (V a) where
     negate (V xs) = V (map (\(c, x) -> (negate c, x)) xs)
 
 class (Ring a, AdditiveGroup v) => Module a v where
     (*>) :: a -> v %1 -> v
 
-instance Eq a => Module CC (V a) where
+instance (Eq a, Movable a) => Module CC (V a) where
     (*>) c (V v) = V $ map (\(c', x) -> (c * c', x)) v
 
 class EqMonad m where
     return :: Eq a => a -> m a
-    (>>=)  :: (Eq a, Eq b) => m a %1 -> (a %1 -> m b) %1 -> m b
+    (>>=)  :: (Eq a, Eq b, Movable a, Movable b) => m a %1 -> (a %1 -> m b) %1 -> m b
 
 infixl 1 >>=
 
 instance EqMonad V where
     return x = V [(1, x)]
-    (>>=) (V xs) f = undefined xs f -- foldMap (\(c, x) -> (\c' -> c' *> f x) (move c)) xs
+    (>>=) = Unsafe.coerce bind
+      where
+        bind :: V a -> (a -> V b) -> V b
+        bind (V xs) f =
+            V $ Prelude.concatMap (\(c, x) ->
+                case f x of
+                    V ys -> Prelude.map (\(c', y) -> (c * c', y)) ys
+            ) xs

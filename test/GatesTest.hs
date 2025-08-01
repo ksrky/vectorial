@@ -3,6 +3,7 @@
 module GatesTest where
 
 import Data.Complex
+import Prelude.Linear   qualified as L
 import Test.HUnit
 import Vectorial.Gates
 import Vectorial.Vector as V
@@ -62,7 +63,7 @@ testSingleQubitGates = TestList
 
     , "Pauli-Z on |1⟩" ~:
         let result = ket1 V.>>= pauliZ
-            expected = negate ket1
+            expected = L.negate ket1
         in approxEqualV result expected ~? "Z|1⟩ = -|1⟩"
     ]
 
@@ -86,12 +87,12 @@ testTwoQubitGates = TestList
 
     , "CZ on |11⟩" ~:
         let result = cz True True
-            expected = negate (V.return (True, True))
+            expected = L.negate (V.return (True, True))
         in approxEqualV result expected ~? "CZ|11⟩ = -|11⟩"
     ]
 
 -- Test quantum circuits using monadic composition
-{- testQuantumCircuits :: Test
+testQuantumCircuits :: Test
 testQuantumCircuits = TestList
     [ "Bell state circuit structure" ~:
         let bellCircuit = V.do
@@ -119,7 +120,7 @@ testQuantumCircuits = TestList
                 cz control target'    -- Controlled-Z gate
             V result = phaseKickback
         in length result > 0 ~? "Phase kickback circuit with do notation"
-    ] -}
+    ]
 
 -- Test quantum interference
 testQuantumInterference :: Test
@@ -162,7 +163,7 @@ testGateProperties = TestList
     ]
 
 -- Test proper vector operations using explicit addition
-{-testVectorOperations :: Test
+testVectorOperations :: Test
 testVectorOperations = TestList
     [ "Manual Hadamard composition with do notation" ~:
         let manualHH = V.do
@@ -175,7 +176,7 @@ testVectorOperations = TestList
     , "Vector addition combines like terms" ~:
         let state1 = V [(CC (0.5 :+ 0), False)]
             state2 = V [(CC (0.5 :+ 0), False)]
-            combined = state1 A.+ state2
+            combined = state1 L.+ state2
         in case combined of
             V [(coeff, _)] -> coeff ~?= CC (1.0 :+ 0.0)
             _ -> TestCase $ assertFailure "Combined state should have one component"
@@ -209,7 +210,7 @@ testVectorOperations = TestList
                 pauliZ q2           -- Apply phase
             V result = multiGate
         in length result > 0 ~? "Multi-gate sequence with do notation"
-    ] -}
+    ]
 
 -- Combine all tests
 gatesTests :: Test
@@ -217,9 +218,9 @@ gatesTests = TestList
     [ TestLabel "Basic States" testBasicStates
     , TestLabel "Single Qubit Gates" testSingleQubitGates
     , TestLabel "Two Qubit Gates" testTwoQubitGates
-    -- , TestLabel "Quantum Circuits" testQuantumCircuits
+    , TestLabel "Quantum Circuits" testQuantumCircuits
     , TestLabel "Quantum Interference" testQuantumInterference
     , TestLabel "Superposition" testSuperposition
     , TestLabel "Gate Properties" testGateProperties
-    -- , TestLabel "Vector Operations" testVectorOperations
+    , TestLabel "Vector Operations" testVectorOperations
     ]

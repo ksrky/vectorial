@@ -52,26 +52,3 @@ cz False False = V.return (False, False)
 cz False True  = V.return (False, True)
 cz True False  = V.return (True, False)
 cz True True   = negate $ V.return (True, True)
-
-manualHH :: V Bool
-manualHH = V.do
-    x <- ket0
-    x' <- hadamard x
-    hadamard x'
-
--- bellCircuit' :: V Bool
--- bellCircuit' = ket0 V.>>= hadamard V.>>= \q1 -> (ket0 V.>>= \q2 -> cnot q1 q2)
-
-bellCircuit :: V (Bool, Bool)
-bellCircuit = V.do
-    q1 <- ket0
-    -- q1' <- hadamard q1
-    q2 <- ket0
-    cnot q1 q2
-
-groverStep :: V Bool
-groverStep = V.do
-    q <- ket0
-    q1 <- hadamard q      -- Create superposition
-    q2 <- pauliZ q1       -- Oracle (phase flip)
-    hadamard q2
