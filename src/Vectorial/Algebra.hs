@@ -1,4 +1,8 @@
+{-# LANGUAGE NoImplicitPrelude #-}
+
 module Vectorial.Algebra where
+
+import Prelude (Monoid (..), Semigroup (..))
 
 class Monoid a => Additive a where
     zero :: a

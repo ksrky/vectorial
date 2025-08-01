@@ -43,6 +43,7 @@ test-suite vectorial-tests
     other-modules:    GatesTest
     build-depends:    base ^>=4.21.0.0,
                       vectorial,
+                      linear-base,
                       HUnit
     hs-source-dirs:   test
     default-language: GHC2021
