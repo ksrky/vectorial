@@ -18,7 +18,7 @@ common warnings
 
 library
     import:           warnings
-    exposed-modules:  Vectorial.Algebra
+    exposed-modules:  Data.Algebra.Linear
                       Vectorial.Gates
                       Vectorial.Vector
     other-modules:    

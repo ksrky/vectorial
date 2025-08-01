@@ -126,12 +126,19 @@ testQuantumCircuits = TestList
 testQuantumInterference :: Test
 testQuantumInterference = TestList
     [ "Interference creates complex amplitudes" ~:
-        let interferenceResult = ket0 V.>>= hadamard V.>>= pauliZ V.>>= hadamard
+        let interferenceResult = V.do
+                q <- ket0
+                q1 <- hadamard q
+                q2 <- pauliZ q1
+                hadamard q2
             V result = interferenceResult
         in length result > 1 ~? "HZH creates interference pattern"
 
     , "Hadamard sequence preserves structure" ~:
-        let constructiveResult = ket0 V.>>= hadamard V.>>= hadamard
+        let constructiveResult = V.do -- ket0 V.>>= hadamard V.>>= hadamard
+                q <- ket0
+                q' <- hadamard q
+                hadamard q'
             V result = constructiveResult
         in length result > 0 ~? "HH produces valid quantum state"
     ]
@@ -140,11 +147,15 @@ testQuantumInterference = TestList
 testSuperposition :: Test
 testSuperposition = TestList
     [ "Equal superposition" ~:
-        let superpos = ket0 V.>>= hadamard
+        let superpos = V.do
+                q <- ket0
+                hadamard q
         in approxEqualV superpos ketPlus ~? "Hadamard creates equal superposition"
 
     , "Superposition with Pauli-X" ~:
-        let result = ketPlus V.>>= pauliX
+        let result = V.do
+                q <- ketPlus
+                pauliX q
             expected = V [(1/sqrt 2, True), (1/sqrt 2, False)]
         in approxEqualV result expected ~? "X flips superposition components"
     ]
@@ -153,11 +164,17 @@ testSuperposition = TestList
 testGateProperties :: Test
 testGateProperties = TestList
     [ "Pauli-X is self-inverse" ~:
-        let result = ket0 V.>>= pauliX V.>>= pauliX
+        let result = V.do
+                q <- ket0
+                q' <- pauliX q
+                pauliX q'
         in approxEqualV result ket0 ~? "XX = I"
 
     , "Hadamard creates superposition" ~:
-        let result = ket1 V.>>= hadamard V.>>= hadamard
+        let result = V.do
+                q <- ket1
+                q' <- hadamard q
+                hadamard q'
             V components = result
         in length components >= 2 ~? "HH creates superposition pattern"
     ]

@@ -4,13 +4,12 @@
 
 module Vectorial.Vector where
 
+import Data.Algebra.Linear
 import Data.Complex
 import Data.List.Linear
-import Data.Monoid.Linear
-import Data.Num.Linear
 import Prelude qualified
 import Prelude.Linear
-import Unsafe.Linear      qualified as Unsafe
+import Unsafe.Linear       qualified as Unsafe
 
 type RR = Double
 
@@ -106,15 +105,13 @@ instance (Eq a, Movable a) => AddIdentity (V a) where
 instance (Eq a, Movable a) => AdditiveGroup (V a) where
     negate (V xs) = V (map (\(c, x) -> (negate c, x)) xs)
 
-class (Ring a, AdditiveGroup v) => Module a v where
-    (*>) :: a -> v %1 -> v
-
 instance (Eq a, Movable a) => Module CC (V a) where
-    (*>) c (V v) = V $ map (\(c', x) -> (c * c', x)) v
+    (*>) c (V v) = case move c of
+        Ur c1 -> V $ map (\(c', x) -> (c1 * c', x)) v
 
 class EqMonad m where
     return :: Eq a => a -> m a
-    (>>=)  :: (Eq a, Eq b, Movable a, Movable b) => m a %1 -> (a %1 -> m b) %1 -> m b
+    (>>=)  :: (Eq a, Eq b) => m a %1 -> (a %1 -> m b) %1 -> m b
 
 infixl 1 >>=
 
