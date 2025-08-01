@@ -1,6 +1,5 @@
 {-# LANGUAGE LinearTypes       #-}
 {-# LANGUAGE NoImplicitPrelude #-}
-{-# LANGUAGE RebindableSyntax  #-}
 
 module Vectorial.Vector where
 
