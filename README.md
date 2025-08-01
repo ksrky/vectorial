@@ -14,7 +14,7 @@ A Haskell library for quantum circuit simulation using Linear Types and a vector
 
 ```haskell
 {-# LANGUAGE QualifiedDo #-}
-import Vectorial.Gates
+{-# LANGUAGE LinearTypes #-}
 import Vectorial.Vector as V
 
 -- Basic quantum states
@@ -24,8 +24,8 @@ ket1 = V.return True   -- |1⟩
 
 -- Basic quantum gates
 hadamard :: Bool %1 -> V Bool
-hadamard False = ketPlus
-hadamard True  = ketMinus
+hadamard False = V.V [(1 / sqrt 2, False), (1 / sqrt 2, True)]
+hadamard True  = V.V [(1 / sqrt 2, False), (- 1 / sqrt 2, True)]
 
 pauliX :: Bool %1 -> V Bool
 pauliX False = V.return True
@@ -45,4 +45,5 @@ bellState = V.do
     q2 <- ket0          -- Second qubit in |0⟩
     cnot q1' q2         -- Apply CNOT: |+⟩⊗|0⟩ → (|00⟩ + |11⟩)/√2
 -- Result: V [(0.7071, (False,False)), (0.7071, (True,True))]
+
 ```

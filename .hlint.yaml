@@ -1,2 +1,3 @@
 - ignore: {name: "Use first"}
 - ignore: {name: "Use second"}
+- ignore: {name: "Parenthesize unary negation"}
