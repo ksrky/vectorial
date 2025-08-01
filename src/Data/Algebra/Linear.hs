@@ -1,4 +1,5 @@
-{-# LANGUAGE LinearTypes #-}
+{-# LANGUAGE LinearTypes       #-}
+{-# LANGUAGE NoImplicitPrelude #-}
 
 module Data.Algebra.Linear where
 

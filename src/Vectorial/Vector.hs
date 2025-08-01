@@ -32,6 +32,12 @@ instance Movable CC where
 instance Eq CC where
     CC (x1 :+ x2) == CC (y1 :+ y2) = x1 == y1 && x2 == y2
 
+instance Prelude.Semigroup CC where
+    CC x <> CC y = CC (x Prelude.+ y)
+
+instance Prelude.Monoid CC where
+    mempty = CC (0 :+ 0)
+
 instance Additive CC where
     CC (x1 :+ y1) + CC (x2 :+ y2) = CC ((x1 + x2) :+ (y1 + y2))
 
@@ -89,15 +95,18 @@ instance Monoid CC where
 newtype V a = V [(CC, a)]
     deriving (Show, Eq)
 
-instance (Eq a, Movable a) => Semigroup (V a) where
-    V xs <> V ys = case (move xs, move ys) of
-        (Ur xs', Ur ys') -> V [(c1 + c2, x) | (c1, x) <- xs', (c2, y) <- ys', x == y]
-
-instance (Eq a, Movable a) => Monoid (V a) where
-    mempty = V []
-
 instance (Eq a, Movable a) => Additive (V a) where
-    (+) = (<>)
+    V xs + V ys = case (move xs, move ys) of
+        (Ur xs', Ur ys') -> Prelude.foldr add (V ys') xs'
+      where
+        add :: (CC, a) -> V a -> V a
+        add (c, x) (V xs') = V (addV c x xs')
+
+        addV :: CC -> a -> [(CC, a)] -> [(CC, a)]
+        addV c x [] = [(c, x)]
+        addV c1 x ((c2, y) : bys)
+            | x == y    = (c1 + c2, y) : bys
+            | otherwise = (c2, y) : addV c1 x bys
 
 instance (Eq a, Movable a) => AddIdentity (V a) where
     zero = V []
@@ -111,17 +120,14 @@ instance (Eq a, Movable a) => Module CC (V a) where
 
 class EqMonad m where
     return :: Eq a => a -> m a
-    (>>=)  :: (Eq a, Eq b) => m a %1 -> (a %1 -> m b) %1 -> m b
+    (>>=)  :: (Eq a, Eq b, Movable b) => m a %1 -> (a %1 -> m b) %1 -> m b
 
 infixl 1 >>=
 
 instance EqMonad V where
     return x = V [(1, x)]
+    (>>=) :: forall a b. (Eq a, Eq b, Movable b) => V a %1 -> (a %1 -> V b) %1 -> V b
     (>>=) = Unsafe.coerce bind
       where
         bind :: V a -> (a -> V b) -> V b
-        bind (V xs) f =
-            V $ Prelude.concatMap (\(c, x) ->
-                case f x of
-                    V ys -> Prelude.map (\(c', y) -> (c * c', y)) ys
-            ) xs
+        bind (V xs) f = Prelude.foldr (\(c, x) v -> (c *> f x) + v) zero xs
