@@ -1,116 +1,48 @@
 # Vectorial
 
-A Haskell library for quantum circuit simulation using a vector-based approach.
+A Haskell library for quantum circuit simulation using Linear Types and a vector-based approach.
 
 ## Features
 
-- Quantum gate operations (Pauli-X, Pauli-Z, Hadamard, Phase S, CNOT)
-- Vector-based quantum state representation
-- Let binding with pattern matching
-- Evaluation of quantum circuits
-
-## Building and Testing
-
-To build the project:
-```bash
-cabal build
-```
-
-To run tests:
-```bash
-cabal test
-```
-
-## Test Coverage
-
-The test suite is organized into three modules:
-
-### EvalTests Module
-**Basic Evaluation Tests**
-- Bit evaluation
-- Variable evaluation from context
-
-**Gate Evaluation Tests**
-- Pauli-X gate (bit flip)
-- Hadamard gate (superposition creation with coefficient verification)
-- Phase S gate (complex phase rotation with i coefficient verification)
-
-**CNOT Gate Tests**
-- All four computational basis states (|00⟩, |01⟩, |10⟩, |11⟩)
-
-**Let Binding Tests**
-- Variable pattern matching
-- Bit pattern matching
-- Pair pattern matching
-
-**Complex Circuit Tests**
-- Multiple gate applications
-- Various gate combinations
-
-**Superposition Tests**
-- **Bell state preparation**: Creates |Φ+⟩ = (|00⟩ + |11⟩)/√2 and verifies coefficients
-- **Superposition normalization**: Verifies that quantum states remain normalized
-- **Gates on superposition states**: Tests X gate application to |+⟩ state
-
-### ParserTests Module
-**Basic Syntax Parsing**
-- Bit literals, variables, let expressions, pairs
-- Complex program structures
-- Nested expressions and pattern matching
-- Error handling
-
-**Parser Syntax Tests**
-- Parentheses handling
-- Complex variable names
-- Multiple coefficient terms
-
-**Pattern Parsing Tests**
-- Simple and nested pattern structures
-- Mixed bit and variable patterns
-- Complex pair patterns
-
-**Quantum Algorithm Examples**
-- Quantum Teleportation structure parsing
-- Deutsch-Jozsa algorithm components
-- Grover's algorithm iteration patterns
-- Quantum error correction syntax
-
-### ComplexEvalTests Module
-**Advanced Quantum Circuit Evaluation**
-- Superposition creation with coefficient verification
-- Manual gate applications with complex circuits
-- Bell state preparation with complete evaluation
-
-**Quantum Protocol Simulations**
-- **Quantum Teleportation Protocol**: Simplified protocol with multi-qubit operations
-- **Quantum Error Correction**: 3-qubit bit flip code encoding
-- **Quantum Phase Kickback**: Controlled operations with phase effects
-- **Quantum Fourier Transform**: 2-qubit QFT with normalization verification
-
-All tests use the Hspec testing framework and verify:
-- Correct evaluation of quantum circuits using `eval` and `evalV` functions
-- Proper coefficient values in superposition states (1/√2 for Hadamard gates)
-- Complex phase factors (i for Phase S gate)
-- Quantum state normalization
-- Bell state entanglement preparation
-- **Parser correctness**: Syntax tree generation from text input
-- **Complex program evaluation**: Multi-step quantum algorithms
+- **Linear Types**: Safe resource management using Haskell's Linear Types
+- **Quantum Gates**: Pauli-X, Pauli-Z, Hadamard, Phase S/T, CNOT, CZ gates
+- **Vector-based Quantum States**: Complex amplitude representation with automatic simplification
+- **Monadic Quantum Circuits**: Compose quantum circuits using do-notation
+- **Floating Point Precision**: Robust handling of numerical precision in quantum computations
 
 ## Example Usage
 
 ```haskell
-import Vectorial.Eval
+{-# LANGUAGE QualifiedDo #-}
 import Vectorial.Gates
-import Vectorial.Syntax
-import Vectorial.Vector
+import Vectorial.Vector as V
 
--- Apply Pauli-X gate to |0⟩
-let input = V [(1, Bit False)]
-let result = evalV [] (V [(1, IsoApp pauliX input)])
--- Result: V [(1, PBit True)]
+-- Basic quantum states
+ket0, ket1 :: V Bool
+ket0 = V.return False  -- |0⟩
+ket1 = V.return True   -- |1⟩
 
--- Apply Hadamard gate to |0⟩
-let input = V [(1, Bit False)]
-let result = evalV [] (V [(1, IsoApp hadamard input)])
--- Result: ketPlus = V [(1/√2, PBit False), (1/√2, PBit True)]
+-- Basic quantum gates
+hadamard :: Bool %1 -> V Bool
+hadamard False = ketPlus
+hadamard True  = ketMinus
+
+pauliX :: Bool %1 -> V Bool
+pauliX False = V.return True
+pauliX True  = V.return False
+
+cnot :: Bool %1 -> Bool %1 -> V (Bool, Bool)
+cnot False False = V.return (False, False)
+cnot False True  = V.return (False, True)
+cnot True False  = V.return (True, True)
+cnot True True   = V.return (True, False)
+
+-- Bell State Creation (Quantum Entanglement)
+bellState :: V (Bool, Bool)
+bellState = V.do
+    q1 <- ket0          -- First qubit in |0⟩
+    q1' <- hadamard q1  -- Apply Hadamard: |0⟩ → |+⟩
+    q2 <- ket0          -- Second qubit in |0⟩
+    cnot q1' q2         -- Apply CNOT: |+⟩⊗|0⟩ → (|00⟩ + |11⟩)/√2
+-- Result: V [(0.7071, (False,False)), (0.7071, (True,True))]
 ```
