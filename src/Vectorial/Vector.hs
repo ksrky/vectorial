@@ -13,7 +13,7 @@ import Unsafe.Linear       qualified as Unsafe
 type RR = Double
 
 newtype CC = CC (Complex RR)
-    deriving (Show, Prelude.Eq, Prelude.Num)
+    deriving (Show, Prelude.Eq, Prelude.Num, Fractional, Floating)
 
 instance Consumable CC where
     consume (CC (x :+ y)) = consume x <> consume y
@@ -63,33 +63,8 @@ instance Ring CC
 instance FromInteger CC where
     fromInteger n = CC (fromInteger n :+ 0)
 
-instance Fractional CC where
-    fromRational r = CC (fromRational r :+ 0)
-    CC (x1 :+ y1) / CC (x2 :+ y2) =
-        let denom = x2 * x2 + y2 * y2
-        in CC ((x1 * x2 + y1 * y2) / denom :+ (y1 * x2 - x1 * y2) / denom)
-
-instance Floating CC where
-    pi = CC Prelude.pi
-    exp (CC z) = CC (Prelude.exp z)
-    log (CC z) = CC (Prelude.log z)
-    sin (CC z) = CC (Prelude.sin z)
-    cos (CC z) = CC (Prelude.cos z)
-    asin (CC z) = CC (Prelude.asin z)
-    acos (CC z) = CC (Prelude.acos z)
-    atan (CC z) = CC (Prelude.atan z)
-    sinh (CC z) = CC (Prelude.sinh z)
-    cosh (CC z) = CC (Prelude.cosh z)
-    asinh (CC z) = CC (Prelude.asinh z)
-    acosh (CC z) = CC (Prelude.acosh z)
-    atanh (CC z) = CC (Prelude.atanh z)
-
-
-instance Semigroup CC where
-    (<>) = (+)
-
-instance Monoid CC where
-    mempty = 0
+magn :: CC %1 -> RR
+magn c = case move c of Ur (CC z) -> magnitude z
 
 newtype V a = V [(CC, a)]
     deriving (Show, Eq)
@@ -118,7 +93,7 @@ instance (Eq a, Movable a) => Module CC (V a) where
         Ur c1 -> V $ map (\(c', x) -> (c1 * c', x)) v
 
 class EqMonad m where
-    return :: Eq a => a -> m a
+    return :: Eq a => a %1 -> m a
     (>>=)  :: (Eq a, Eq b, Movable b) => m a %1 -> (a %1 -> m b) %1 -> m b
 
 infixl 1 >>=
@@ -130,3 +105,6 @@ instance EqMonad V where
       where
         bind :: V a -> (a -> V b) -> V b
         bind (V xs) f = Prelude.foldr (\(c, x) v -> (c *> f x) + v) zero xs
+
+(|*|) :: (EqMonad m, Eq a, Eq b, Movable a, Movable b) => m a %1 -> m b %1 -> m (a, b)
+(|*|) m1 m2 = m1 >>= \x1 -> m2 >>= \x2 -> return (x1, x2)
