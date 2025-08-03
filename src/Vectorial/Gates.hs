@@ -1,19 +1,19 @@
 {-# LANGUAGE LinearTypes       #-}
 {-# LANGUAGE NoImplicitPrelude #-}
-{-# LANGUAGE QualifiedDo       #-}
 
 module Vectorial.Gates where
 
+import Data.Algebra.Linear
 import Data.Bool.Linear
 import Data.Complex
 import Prelude.Linear
 import Vectorial.Projection
 import Vectorial.Vector     as V
 
-ket0 :: V Bool
+ket0 :: RMonad m => m Bool
 ket0 = return False
 
-ket1 :: V Bool
+ket1 :: RMonad m => m Bool
 ket1 = return True
 
 ketPlus :: V Bool
@@ -54,11 +54,8 @@ cz False True  = return (False, True)
 cz True False  = return (True, False)
 cz True True   = negate $ return (True, True)
 
-swap :: Bool %1 -> Bool %1 -> V (Bool, Bool)
-swap False False = return (False, False)
-swap False True  = return (True, False)
-swap True False  = return (False, True)
-swap True True   = return (True, True)
+swap :: (Basis a, Basis b) => a %1 -> b %1 -> V (b, a)
+swap x y = return (y, x)
 
 controlU :: (Bool %1 -> V Bool) -> Bool %1 -> Bool %1 -> V (Bool, Bool)
 controlU _ False False = return (False, False)
