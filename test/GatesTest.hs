@@ -7,6 +7,7 @@ import Prelude.Linear   qualified as L
 import Test.HUnit
 import Vectorial.Gates
 import Vectorial.Vector as V
+import Vectorial.Monad as V
 
 -- Helper function to check if two complex numbers are approximately equal
 approxEqual :: CC -> CC -> Bool

@@ -1,8 +1,6 @@
-{-# LANGUAGE FunctionalDependencies #-}
+{-# LANGUAGE DefaultSignatures #-}
 {-# LANGUAGE LinearTypes       #-}
 {-# LANGUAGE NoImplicitPrelude #-}
-{-# LANGUAGE TypeFamilies #-}
-{-# LANGUAGE DefaultSignatures #-}
 
 module Data.Algebra.Linear where
 
@@ -12,46 +10,46 @@ import Data.Unrestricted.Linear
 import Prelude.Linear
 import Prelude qualified
 
-class (Ring r, AdditiveGroup v) => Module r v | v -> r where
+class (Ring r, AdditiveGroup v) => Module r v where
     (*>) :: r %1 -> v %1 -> v
 
-class GBasis f where
+-- | @compose . decompose = id@
+class (Ring r, Module r (v a)) => FreeModule r v a where
+    decompose :: v a %1 -> [(r, a)]
+    generate  :: [(r, a)] %1 -> v a
+
+class GSeparable f where
     gbasis :: [f a]
 
-instance GBasis V1 where
+instance GSeparable V1 where
     gbasis = []
 
-instance GBasis U1 where
+instance GSeparable U1 where
     gbasis = [U1]
 
-instance (GBasis a, GBasis b) => GBasis (a :+: b) where
+instance (GSeparable a, GSeparable b) => GSeparable (a :+: b) where
     gbasis = Prelude.map L1 gbasis Prelude.++ Prelude.map R1 gbasis
 
-instance (GBasis a, GBasis b) => GBasis (a :*: b) where
+instance (GSeparable a, GSeparable b) => GSeparable (a :*: b) where
     gbasis = [a :*: b | a <- gbasis, b <- gbasis]
 
-instance GBasis a => GBasis (M1 i c a) where
+instance GSeparable a => GSeparable (M1 i c a) where
     gbasis = Prelude.map M1 gbasis
 
-instance Basis c => GBasis (K1 i c) where
+instance Separable c => GSeparable (K1 i c) where
     gbasis = Prelude.map K1 basis
 
-class (Eq a, Movable a) => Basis a where
+class Movable a => Separable a where
     basis :: [a]
-    default basis :: (Generic a, GBasis (Rep a)) => [a]
+    default basis :: (Generic a, GSeparable (Rep a)) => [a]
     basis = Prelude.map to gbasis
 
-instance Basis ()
+instance Separable ()
 
-instance Basis Bool
+instance Separable Bool
 
-instance (Basis a, Basis b) => Basis (a, b)
+instance (Separable a, Separable b) => Separable (a, b)
 
-instance Basis a => Basis (Maybe a)
+instance Separable a => Separable (Maybe a)
 
-instance (Basis a, Basis b) => Basis (Either a b) where
-
--- | @compose . decompose = id@
-class (Module r (v a), Basis a) => FreeModule r v a | v -> r where
-    decompose :: v a -> [(r, a)]
-    compose :: [(r, a)] -> v a
+instance (Separable a, Separable b) => Separable (Either a b) where

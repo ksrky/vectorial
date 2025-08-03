@@ -1,7 +1,5 @@
 {-# LANGUAGE LinearTypes       #-}
 {-# LANGUAGE NoImplicitPrelude #-}
-{-# LANGUAGE DefaultSignatures #-}
-{-# LANGUAGE TypeFamilies #-}
 
 module Vectorial.Vector where
 
@@ -11,6 +9,7 @@ import Data.List.Linear
 import Prelude qualified
 import Prelude.Linear
 import Unsafe.Linear       qualified as Unsafe
+import Vectorial.Monad
 
 type RR = Double
 
@@ -94,23 +93,14 @@ instance (Eq a, Movable a) => Module CC (V a) where
     (*>) c (V v) = case move c of
         Ur c1 -> V $ map (\(c', x) -> (c1 * c', x)) v
 
-instance Basis a => FreeModule CC V a where
+instance (Eq a, Movable a) => FreeModule CC V a where
     decompose (V xs) = xs
-    compose = V
-
-class RMonad m where
-    return :: (Basis a) => a %1 -> m a
-    (>>=)  :: (Basis a, Basis b) => m a %1 -> (a %1 -> m b) %1 -> m b
-
-infixl 1 >>=
+    generate = V
 
 instance RMonad V where
     return x = V [(1, x)]
-    (>>=) :: forall a b. (Eq a, Eq b, Movable b) => V a %1 -> (a %1 -> V b) %1 -> V b
+    (>>=) :: forall a b. (Eq b, Movable b) => V a %1 -> (a %1 -> V b) %1 -> V b
     (>>=) = Unsafe.coerce bind
       where
         bind :: V a -> (a -> V b) -> V b
         bind (V xs) f = Prelude.foldr (\(c, x) v -> (c *> f x) + v) zero xs
-
-(|*|) :: (RMonad m, Basis a, Basis b) => m a %1 -> m b %1 -> m (a, b)
-(|*|) m1 m2 = m1 >>= \x1 -> m2 >>= \x2 -> return (x1, x2)

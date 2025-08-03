@@ -21,12 +21,14 @@ library
   exposed-modules:
     Data.Algebra.Linear
     Vectorial.Gates
+    Vectorial.Monad
     Vectorial.Projection
     Vectorial.Vector
 
   other-modules:
   build-depends:
     base ^>=4.21.0.0,
+    containers,
     linear-base,
     logict,
     random,
