@@ -28,10 +28,10 @@ library
   other-modules:
   build-depends:
     base ^>=4.21.0.0,
-    containers,
     linear-base,
     logict,
     random,
+    vector
 
   hs-source-dirs: src
   default-language: GHC2021

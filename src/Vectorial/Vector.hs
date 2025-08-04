@@ -48,7 +48,7 @@ instance AdditiveGroup CC where
     negate (CC (x :+ y)) = CC (negate x :+ negate y)
 
 instance Multiplicative CC where
-    (CC (x1 :+ y1)) * (CC (x2 :+ y2)) = withDup (dup2 x1) (dup2 y1) (dup2 x2) (dup2 y2)
+    CC (x1 :+ y1) * CC (x2 :+ y2) = withDup (dup2 x1) (dup2 y1) (dup2 x2) (dup2 y2)
       where
         withDup :: (RR, RR) %1 -> (RR, RR) %1 -> (RR, RR) %1 -> (RR, RR) %1 -> CC
         withDup (x1', x1'') (y1', y1'') (x2', x2'') (y2', y2'') =
@@ -70,37 +70,35 @@ magn c = case move c of Ur (CC z) -> magnitude z
 newtype V a = V [(CC, a)]
     deriving (Show, Eq)
 
-instance (Eq a, Movable a) => Additive (V a) where
-    V xs + V ys = case (move xs, move ys) of
-        (Ur xs', Ur ys') -> Prelude.foldr add (V ys') xs'
+instance (Eq a, Dupable a) => Additive (V a) where
+    V xs + V ys = V (foldr (uncurry addV) ys xs)
       where
-        add :: (CC, a) -> V a -> V a
-        add (c, x) (V xs') = V (addV c x xs')
-
-        addV :: CC -> a -> [(CC, a)] -> [(CC, a)]
+        addV :: CC %1 -> a %1 -> [(CC, a)] %1 -> [(CC, a)]
         addV c x [] = [(c, x)]
-        addV c1 x ((c2, y) : bys)
-            | x == y    = (c1 + c2, y) : bys
-            | otherwise = (c2, y) : addV c1 x bys
+        addV c1 x ((c2, y) : bys) = case (dup2 x, dup2 y) of
+            ((x', x''), (y', y'')) ->
+                case x' == y' of
+                    True  -> lseq (consume x'') ((c1 + c2, y'') : bys)
+                    False -> (c2, y'') : addV c1 x'' bys
 
-instance (Eq a, Movable a) => AddIdentity (V a) where
+instance (Eq a, Dupable a) => AddIdentity (V a) where
     zero = V []
 
-instance (Eq a, Movable a) => AdditiveGroup (V a) where
+instance (Eq a, Dupable a) => AdditiveGroup (V a) where
     negate (V xs) = V (map (\(c, x) -> (negate c, x)) xs)
 
-instance (Eq a, Movable a) => Module CC (V a) where
+instance (Eq a, Dupable a) => Module CC (V a) where
     (*>) c (V v) = case move c of
         Ur c1 -> V $ map (\(c', x) -> (c1 * c', x)) v
 
-instance (Eq a, Movable a) => FreeModule CC V a where
+instance (Eq a, Dupable a) => FreeModule CC V a where
     decompose (V xs) = xs
     generate = V
 
 instance RMonad V where
     return x = V [(1, x)]
-    (>>=) :: forall a b. (Eq b, Movable b) => V a %1 -> (a %1 -> V b) %1 -> V b
-    (>>=) = Unsafe.coerce bind
+    (>>=) :: forall a b. (Eq b, Dupable b) => V a %1 -> (a %1 -> V b) %1 -> V b
+    (>>=) = Unsafe.toLinear2 bind
       where
-        bind :: V a -> (a -> V b) -> V b
+        bind :: V a -> (a %1 -> V b) -> V b
         bind (V xs) f = Prelude.foldr (\(c, x) v -> (c *> f x) + v) zero xs
