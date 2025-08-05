@@ -3,7 +3,6 @@
 
 module Vectorial.Gates where
 
-import Data.Algebra.Linear
 import Data.Bool.Linear
 import Data.Complex
 import Prelude.Linear
@@ -55,7 +54,7 @@ cz False True  = return (False, True)
 cz True False  = return (True, False)
 cz True True   = negate $ return (True, True)
 
-swap :: (Separable a, Separable b) => a %1 -> b %1 -> V (b, a)
+swap :: (Restrict V a, Restrict V b) => a %1 -> b %1 -> V (b, a)
 swap x y = return (y, x)
 
 controlU :: (Bool %1 -> V Bool) -> Bool %1 -> Bool %1 -> V (Bool, Bool)

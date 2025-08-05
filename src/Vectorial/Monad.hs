@@ -1,15 +1,17 @@
-{-# LANGUAGE LinearTypes #-}
+{-# LANGUAGE LinearTypes       #-}
 {-# LANGUAGE NoImplicitPrelude #-}
+{-# LANGUAGE TypeFamilies      #-}
 
 module Vectorial.Monad where
 
-import Prelude.Linear
+import Data.Kind
 
 class RMonad m where
-    return :: (Dupable a) => a %1 -> m a
-    (>>=)  :: (Eq a, Dupable a, Eq b, Dupable b) => m a %1 -> (a %1 -> m b) %1 -> m b
+    type Restrict m a :: Constraint
+    return :: (Restrict m a) => a %1 -> m a
+    (>>=)  :: (Restrict m a, Restrict m b) => m a %1 -> (a %1 -> m b) %1 -> m b
 
 infixl 1 >>=
 
-(|*|) :: (RMonad m, Eq a, Eq b, Dupable a, Dupable b) => m a %1 -> m b %1 -> m (a, b)
+(|*|) :: (RMonad m, Restrict m a, Restrict m b, Restrict m (a, b)) => m a %1 -> m b %1 -> m (a, b)
 (|*|) m1 m2 = m1 >>= \x1 -> m2 >>= \x2 -> return (x1, x2)

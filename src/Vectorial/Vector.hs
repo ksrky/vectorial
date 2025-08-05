@@ -1,5 +1,6 @@
 {-# LANGUAGE LinearTypes       #-}
 {-# LANGUAGE NoImplicitPrelude #-}
+{-# LANGUAGE TypeFamilies      #-}
 
 module Vectorial.Vector where
 
@@ -71,11 +72,12 @@ instance (Eq a, Dupable a) => Additive (V a) where
       where
         addV :: CC %1 -> a %1 -> [(CC, a)] %1 -> [(CC, a)]
         addV c x [] = [(c, x)]
-        addV c1 x ((c2, y) : bys) = case (dup2 x, dup2 y) of
-            ((x', x''), (y', y'')) ->
-                case x' == y' of
-                    True  -> lseq (consume x'') ((c1 + c2, y'') : bys)
-                    False -> (c2, y'') : addV c1 x'' bys
+        addV c1 x ((c2, y) : bys) =
+            case (dup2 x, dup2 y) of
+                ((x', x''), (y', y'')) ->
+                    case x' == y' of
+                        True  -> lseq (consume x'') ((c1 + c2, y'') : bys)
+                        False -> (c2, y'') : addV c1 x'' bys
 
 instance (Eq a, Dupable a) => AddIdentity (V a) where
     zero = V []
@@ -92,8 +94,9 @@ instance (Eq a, Dupable a) => FreeModule CC V a where
     generate = V
 
 instance RMonad V where
+    type Restrict V a = (Eq a, Dupable a)
     return x = V [(1, x)]
-    (>>=) :: forall a b. (Eq a, Dupable a, Eq b, Dupable b) => V a %1 -> (a %1 -> V b) %1 -> V b
+    (>>=) :: forall a b. (Restrict V a, Restrict V b) => V a %1 -> (a %1 -> V b) %1 -> V b
     (>>=) = Unsafe.toLinear2 bind
       where
         bind :: V a -> (a %1 -> V b) -> V b
