@@ -64,11 +64,7 @@ instance Ring CC
 instance FromInteger CC where
     fromInteger n = CC (fromInteger n :+ 0)
 
-magn :: CC %1 -> RR
-magn c = case move c of Ur (CC z) -> magnitude z
-
 newtype V a = V [(CC, a)]
-    deriving (Show, Eq)
 
 instance (Eq a, Dupable a) => Additive (V a) where
     V xs + V ys = V (foldr (uncurry addV) ys xs)
@@ -97,8 +93,8 @@ instance (Eq a, Dupable a) => FreeModule CC V a where
 
 instance RMonad V where
     return x = V [(1, x)]
-    (>>=) :: forall a b. (Eq b, Dupable b) => V a %1 -> (a %1 -> V b) %1 -> V b
+    (>>=) :: forall a b. (Eq a, Dupable a, Eq b, Dupable b) => V a %1 -> (a %1 -> V b) %1 -> V b
     (>>=) = Unsafe.toLinear2 bind
       where
         bind :: V a -> (a %1 -> V b) -> V b
-        bind (V xs) f = Prelude.foldr (\(c, x) v -> (c *> f x) + v) zero xs
+        bind v f = Prelude.foldr (\(c :: CC, x) v' -> (c *> f x) + v') zero (decompose v)

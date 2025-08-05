@@ -13,7 +13,7 @@ import Prelude qualified
 class (Ring r, AdditiveGroup v) => Module r v where
     (*>) :: r %1 -> v %1 -> v
 
--- | @compose . decompose = id@
+-- | @decompose . generate = id@
 class (Ring r, Module r (v a)) => FreeModule r v a where
     decompose :: v a %1 -> [(r, a)]
     generate  :: [(r, a)] %1 -> v a
@@ -39,7 +39,10 @@ instance GSeparable a => GSeparable (M1 i c a) where
 instance Separable c => GSeparable (K1 i c) where
     gbasis = Prelude.map K1 basis
 
-class Movable a => Separable a where
+instance GSeparable a => GSeparable (Rec1 a) where
+    gbasis = Prelude.map Rec1 gbasis
+
+class Dupable a => Separable a where
     basis :: [a]
     default basis :: (Generic a, GSeparable (Rep a)) => [a]
     basis = Prelude.map to gbasis
@@ -50,6 +53,12 @@ instance Separable Bool
 
 instance (Separable a, Separable b) => Separable (a, b)
 
+instance (Separable a, Separable b, Separable c) => Separable (a, b, c)
+
+instance (Separable a, Separable b, Separable c, Separable d) => Separable (a, b, c, d)
+
 instance Separable a => Separable (Maybe a)
 
 instance (Separable a, Separable b) => Separable (Either a b) where
+
+instance Separable a => Separable [a]
