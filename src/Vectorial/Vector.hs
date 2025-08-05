@@ -65,7 +65,7 @@ instance Ring CC
 instance FromInteger CC where
     fromInteger n = CC (fromInteger n :+ 0)
 
-newtype V a = V [(CC, a)]
+newtype V a = V {unV :: [(CC, a)]}
 
 instance (Eq a, Dupable a) => Additive (V a) where
     V xs + V ys = V (foldr (uncurry addV) ys xs)
@@ -100,4 +100,4 @@ instance RMonad V where
     (>>=) = Unsafe.toLinear2 bind
       where
         bind :: V a -> (a %1 -> V b) -> V b
-        bind v f = Prelude.foldr (\(c :: CC, x) v' -> (c *> f x) + v') zero (decompose v)
+        bind v f = Prelude.foldr (\(c, x) v' -> (c *> f x) + v') zero (unV v)

@@ -13,7 +13,10 @@ import Prelude qualified
 class (Ring r, AdditiveGroup v) => Module r v where
     (*>) :: r %1 -> v %1 -> v
 
--- | @decompose . generate = id@
+-- | Laws:
+--
+-- > decompose . generate = id
+-- > generate . decompose = id
 class (Ring r, Module r (v a)) => FreeModule r v a where
     decompose :: v a %1 -> [(r, a)]
     generate  :: [(r, a)] %1 -> v a
