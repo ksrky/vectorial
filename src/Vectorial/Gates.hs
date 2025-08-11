@@ -1,14 +1,15 @@
 {-# LANGUAGE LinearTypes       #-}
 {-# LANGUAGE NoImplicitPrelude #-}
+{-# LANGUAGE QualifiedDo       #-}
 
 module Vectorial.Gates where
 
 import Data.Bool.Linear
 import Data.Complex
 import Prelude.Linear
-import Vectorial.Monad
+import Vectorial.Monad           as V
 import Vectorial.Projection
-import Vectorial.Vector     as V
+import Vectorial.Vector.Internal as V
 
 ket0 :: V Bool
 ket0 = return False
@@ -65,3 +66,13 @@ controlU u True True   = return True |*| u True
 
 meas :: V Bool -> IO Bool
 meas = simulate
+
+copyU :: (Bool %1 -> V Bool) -> V (Bool %1 -> V Bool, Bool %1 -> V Bool)
+copyU f = return (f, f)
+
+g :: V Bool
+g = V.do
+    q1 <- ket0
+    (u1, u2) <- copyU hadamard
+    q2 <- u1 q1
+    u2 q2

@@ -24,6 +24,7 @@ library
     Vectorial.Monad
     Vectorial.Projection
     Vectorial.Vector
+    Vectorial.Vector.Internal
 
   other-modules:
   build-depends:

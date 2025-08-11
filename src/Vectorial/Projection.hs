@@ -6,7 +6,7 @@ import Control.Monad.Logic
 import Data.Complex
 import Data.Functor.Identity
 import System.Random
-import Vectorial.Vector       qualified as V
+import Vectorial.Vector.Internal qualified as V
 
 type Weight = Double
 

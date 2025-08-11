@@ -3,11 +3,11 @@
 module GatesTest where
 
 import Data.Complex
-import Prelude.Linear   qualified as L
+import Prelude.Linear            qualified as L
 import Test.HUnit
 import Vectorial.Gates
-import Vectorial.Vector as V
-import Vectorial.Monad as V
+import Vectorial.Monad           as V
+import Vectorial.Vector.Internal as V
 
 -- Helper function to check if two complex numbers are approximately equal
 approxEqual :: CC -> CC -> Bool
