@@ -3,7 +3,6 @@
 module GatesTest where
 
 import Data.Complex
-import Prelude.Linear            qualified as L
 import Test.HUnit
 import Vectorial.Gates
 import Vectorial.Monad           as V
@@ -88,7 +87,7 @@ testSingleQubitGates = TestList
 
     , "Pauli-Z on |1⟩" ~:
         let result = ket1 V.>>= pauliZ
-            expected = L.negate ket1
+            expected = V.negate ket1
         in approxEqualV result expected ~? "Z|1⟩ = -|1⟩"
     ]
 
@@ -112,7 +111,7 @@ testTwoQubitGates = TestList
 
     , "CZ on |11⟩" ~:
         let result = cz True True
-            expected = L.negate (V.return (True, True))
+            expected = V.negate (V.return (True, True))
         in approxEqualV result expected ~? "CZ|11⟩ = -|11⟩"
     ]
 
@@ -227,7 +226,7 @@ testVectorOperations = TestList
     , "Vector addition combines like terms" ~:
         let state1 = V [(CC (0.5 :+ 0), False)]
             state2 = V [(CC (0.5 :+ 0), False)]
-            combined = state1 L.+ state2
+            combined = state1 <> state2
         in case combined of
             V [(coeff, _)] -> coeff ~?= CC (1.0 :+ 0.0)
             _ -> TestCase $ assertFailure "Combined state should have one component"
